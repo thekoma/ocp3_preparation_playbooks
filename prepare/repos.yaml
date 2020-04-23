@@ -1,0 +1,35 @@
+---
+- name: Install EPEL repo
+  tags: 
+    - repo
+    - epel
+  yum_repository:
+    name: epel
+    enabled: no
+    gpgkey: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+    description: EPEL YUM repo
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch&infra=$infra&content=$contentdir
+    
+- name: Disable all repositories to clean the environment
+  tags: repo
+  rhsm_repository:
+      name:
+        - '*'
+      state: disabled
+
+- name: Enable basic repositories for all servers
+  tags: repo
+  rhsm_repository:
+      name:
+        - rhel-7-server-rpms
+        - rhel-7-server-extras-rpms
+      state: enabled
+
+- name: Enable OCP repositories for nodes
+  tags: repo
+  when: inventory_hostname in groups.nodes
+  rhsm_repository:
+    name:
+      - rhel-7-server-ansible-2.6-rpms
+      - rhel-7-server-ose-3.11-rpms
+    state: enabled

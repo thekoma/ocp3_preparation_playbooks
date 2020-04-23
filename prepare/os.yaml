@@ -1,0 +1,50 @@
+---
+- name: Set timezone and UTC RTC
+  timezone:
+    name: "Europe/Rome"
+    hwclock: UTC
+
+- name: Check if CA file is defined and exist
+  tags: 
+    - cert
+  stat:
+    path: "{{ openshift_master_named_certificates[0]['cafile'] }}"
+  register: ca_cert_exist
+  when:
+    - openshift_master_named_certificates is defined
+    - openshift_master_named_certificates[0]['cafile'] is defined
+
+- name: Copy custom CA defined in inventory (if any)
+  tags: 
+    - cert
+  block:
+    - name: Copy CA file onto every node
+      copy:
+        src: "{{ openshift_master_named_certificates[0]['cafile'] }}"
+        dest: /etc/pki/ca-trust/source/anchors
+        mode: 0644
+        owner: root
+        group: root
+
+    - name: Update CA Trust keyring w/dynamic stuff
+      shell: update-ca-trust enable
+
+    - name: Update CA Extract
+      shell: update-ca-trust extract
+  when:
+    - ca_cert_exist|bool
+
+- name: Print Warning
+  when: 
+    - not ca_cert_exist|bool 
+    - openshift_master_named_certificates[0]['cafile'] is defined
+  tags: 
+    - cert
+  debug:
+    msg: "Attenzione la CA specificata nell' inventory  '{{ openshift_master_named_certificates[0]['cafile'] }}' non esiste"
+
+- name: Enable service httpd, and not touch the state
+  service:
+    name: firewalld
+    enabled: no
+    state: stopped

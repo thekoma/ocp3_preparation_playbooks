@@ -1,0 +1,69 @@
+- name: Prepare Host for installation of OCP
+  vars:
+    origin_disk_size: "{{ lookup('env','AZURE_STORAGE_ORIGIN_DISK_SIZE') }}"
+    etcd_disk_size: "{{ lookup('env','AZURE_STORAGE_ETCD_DISK_SIZE') }}"
+    docker_disk_size: "{{ lookup('env','AZURE_STORAGE_DOCKER_DISK_SIZE') }}"
+    managed_disk_type: "{{ lookup('env','AZURE_STORAGE_MANAGED_DISK_TYPE') }}"
+    rhn_user: "{{ lookup('env','RHN_USER') }}"
+    rhn_password: "{{ lookup('env','RHN_PASSWORD') }}"
+    rhn_pool_workers: "{{ lookup('env','RHN_POOL_WORKERS') }}"
+    rhn_pool_infra: "{{ lookup('env','RHN_POOL_INFRA') }}"
+    rhn_pool_others: "{{ lookup('env','RHN_POOL_OTHERS') }}"
+    rhn_pool_haproxy: "{{ lookup('env','RHN_POOL_HAPROXY') }}"
+  hosts: all
+  become: true
+  become_user: root
+  tasks:
+    - name: Ping Nodes
+      tags: 
+        - ping
+      ping:
+
+    - name: Debug
+      when: false
+      tags: 
+        - debug
+      debug:
+        msg: System {{ inventory_hostname }} has gateway {{ group.masters }}
+      
+    - name: Prepare nodes disk
+      when: true
+      tags: 
+        - disks
+      import_tasks: prepare/disks.yaml
+
+    - name: Subscribe nodes
+      when: true
+      tags: 
+        - subscription
+      import_tasks: prepare/subscription.yaml
+
+    - name: Prepare Repos
+      when: true
+      tags: 
+        - repo
+      import_tasks: prepare/repos.yaml
+
+    - name: Install Packages
+      when: true
+      tags: 
+        - packages
+      import_tasks: prepare/packages.yaml
+
+    - name: Reboot Machine
+      when: true
+      tags: 
+        - reboot
+      import_tasks: prepare/reboot.yaml
+
+    - name: Preparation of O.S.
+      when: true
+      tags: 
+        - os
+      import_tasks: prepare/os.yaml
+
+    - name: Preparation of HAProxy
+      when: inventory_hostname in groups.haproxy
+      tags: 
+        - haproxy
+      import_tasks: prepare/haproxy.yaml

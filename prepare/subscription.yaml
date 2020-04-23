@@ -1,0 +1,44 @@
+---
+- name: Attach pool Infrastructural Nodes (Master and Infra)
+  when: inventory_hostname in groups.masters or inventory_hostname in groups.infra
+  tags: subscription
+  redhat_subscription:
+    state: present
+    username: "{{ rhn_user }}"
+    password: "{{ rhn_password }}"
+    pool_ids: "{{ rhn_pool_infra }}"
+    auto_attach: False
+    force_register: False
+
+- name: Attach pool Worker Nodes
+  when: inventory_hostname in groups.worker
+  tags: subscription
+  redhat_subscription:
+    state: present
+    username: "{{ rhn_user }}"
+    password: "{{ rhn_password }}"
+    pool_ids: "{{ rhn_pool_workers }}"
+    auto_attach: False
+    force_register: False
+
+- name: Attach pool LB Machines
+  when: inventory_hostname in groups.lb
+  tags: subscription
+  redhat_subscription:
+    state: present
+    username: "{{ rhn_user }}"
+    password: "{{ rhn_password }}"
+    pool_ids: "{{ rhn_pool_haproxy }}"
+    auto_attach: False
+    force_register: False
+
+- name: Attach pool Other Machines
+  when: inventory_hostname in groups.other
+  tags: subscription
+  redhat_subscription:
+    state: present
+    username: "{{ rhn_user }}"
+    password: "{{ rhn_password }}"
+    pool_ids: "{{ rhn_pool_others }}"
+    auto_attach: False
+    force_register: False

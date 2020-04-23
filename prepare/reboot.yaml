@@ -1,0 +1,11 @@
+---
+- name: Check if running kernel is the last installed for real
+  shell: LAST_KERNEL=$(rpm -q --last kernel | awk 'NR==1{sub(/kernel-/,""); print $1}'); CURRENT_KERNEL=$(uname -r); if [ $LAST_KERNEL != $CURRENT_KERNEL ]; then echo true; else echo false; fi
+  ignore_errors: true
+  register: reboot_hint
+  args:
+    executable: /bin/bash
+
+- name: Unconditionally reboot the machine with all defaults
+  when: reboot_hint|bool 
+  reboot:

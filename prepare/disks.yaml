@@ -1,0 +1,69 @@
+---
+- name: create pv and vg for etcd
+  when: inventory_hostname in groups.masters
+  lvg:
+    vg: vg_etcd
+    pvs: "/dev/disk/azure/scsi1/lun2"
+    state: present
+
+- name: create lv for etcd
+  when: inventory_hostname in groups.masters
+  lvol:
+    vg: vg_etcd
+    lv: lv_etcd
+    size: 100%PVS
+
+- name: create filesystem for lv
+  when: inventory_hostname in groups.masters
+  filesystem:
+    fstype: xfs
+    dev: /dev/mapper/vg_etcd-lv_etcd
+
+- name: create etcd folder
+  when: inventory_hostname in groups.masters
+  file:
+    path: /var/lib/etcd
+    state: directory
+
+- name: mount etcd folder 
+  when: inventory_hostname in groups.masters
+  mount:
+    path: /var/lib/etcd
+    src: /dev/mapper/vg_etcd-lv_etcd
+    fstype: xfs
+    state: mounted
+
+- name: create vg for origin local 
+  when: inventory_hostname in groups.nodes
+  lvg:
+    vg: vg_origin_local
+    pvs: "/dev/disk/azure/scsi1/lun1"
+    state: present
+
+- name: Create Origin Logical volumes
+  when: inventory_hostname in groups.nodes
+  lvol:
+    vg: vg_origin_local
+    lv: lv_origin_local
+    size: 100%PVS
+
+- name: Create Origin FileSystem
+  when: inventory_hostname in groups.nodes 
+  filesystem:
+    fstype: xfs
+    dev: /dev/mapper/vg_origin_local-lv_origin_local
+
+- name: Create Origin MountPath
+  when: inventory_hostname in groups.nodes 
+  file:
+    path: /var/lib/origin/openshift.local.volumes
+    state: directory
+
+- name: Create Origin fstab entry and mount
+  when: inventory_hostname in groups.nodes 
+  mount:
+    path: /var/lib/origin/openshift.local.volumes
+    src: /dev/mapper/vg_origin_local-lv_origin_local
+    fstype: xfs
+    opts: defaults,grpquota
+    state: mounted

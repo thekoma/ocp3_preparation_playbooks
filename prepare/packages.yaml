@@ -1,0 +1,70 @@
+---
+- name: Upgrade all Machines
+  tags: packages
+  yum:
+    name: '*'
+    state: latest
+
+- name: Install basic packages
+  tags: packages
+  yum:
+    state: latest
+    name:
+      - bash-completion
+      - bind-utils
+      - bridge-utils
+      - ca-certificates
+      - chrony
+      - docker
+      - gdisk
+      - git
+      - iptables-services
+      - kexec-tools
+      - libselinux-python
+      - libsemanage-python
+      - lsof
+      - lvm2
+      - man
+      - mlocate
+      - net-tools
+      - nmap
+      - psacct
+      - python-firewall
+      - sos
+      - strace
+      - sysstat
+      - tcpdump
+      - telnet
+      - tmux
+      - util-linux
+      - wget
+      - yum-utils
+
+- name: Install ocp additional packages
+  tags: packages
+  when: inventory_hostname in groups.nodes
+  yum:
+    state: latest
+    name:
+      - skopeo
+
+
+- name: Install ocp additional packages
+  tags: packages
+  when: inventory_hostname in groups.haproxy
+  yum:
+    state: latest
+    name:
+      - haproxy
+
+- name: Install from EPEL
+  tags: 
+    - packages
+    - packages-epel
+  yum:
+    state: latest
+    enablerepo: epel
+    name:
+      - htop
+      - ncdu
+
